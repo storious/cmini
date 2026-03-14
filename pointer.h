@@ -1,7 +1,14 @@
 #ifndef POINTER_H_
 #define POINTER_H_
 
+#include <stdio.h>
 #include <stdlib.h>
+
+#ifndef NDEBUG
+constexpr bool utest_debug_mode = true;
+#else
+constexpr bool utest_debug_mode = false;
+#endif
 
 // ==========================================
 // 1. core cleanup function
@@ -13,6 +20,8 @@ static inline void smart_free(void *ptr) {
   if (p && *p) {
     free(*p);
     *p = nullptr;
+    if (utest_debug_mode)
+      fprintf(stderr, "\nfree smart ptr\n");
   }
 }
 
@@ -37,17 +46,18 @@ static inline void smart_free(void *ptr) {
 
 // array allocator
 // example: unique_ptr(int) arr = make_unique_array(int, 10);
-#define make_unique_array(typename, count)  ((typename *)malloc(sizeof(typename) * (count)))
+#define make_unique_array(typename, count)                                     \
+  ((typename *)malloc(sizeof(typename) * (count)))
 
 // zero initialilze allocator
 // example: unique_ptr(struct Radar) r = make_unique_zero(struct Radar);
 #define make_unique_zero(typename) ((typename *)calloc(1, sizeof(typename)))
 
 // ==========================================
-// 4. advance feature：custmize (support recurise struct)
+// 4. advance feature：custom (support recurise struct)
 // ==========================================
 
-// general deleter type
+// general deleter
 // @brief: allowed transfer a free function
 typedef void (*deleter_func_t)(void *);
 
@@ -67,7 +77,7 @@ static inline void smart_free_custom(void *ptr) {
   }
 }
 
-// smart pointer define（custmize deleter）
+// smart pointer define（custom deleter）
 // example: unique_ptr_custom(MyStruct, my_deleter_func) p = ...
 #define unique_ptr_custom(typename, deleter)                                   \
   __attribute__((cleanup(smart_free_custom))) struct {                         \
@@ -77,8 +87,8 @@ static inline void smart_free_custom(void *ptr) {
 
 // helper initialilze define
 // example: auto p = make_unique_custom(MyStruct, my_deleter);
-#define make_unique_custom(typename, deleter, raw_pointer)                     \
-  {.ptr = (typename *)raw_pointer, .deleter = (deleter_func_t)deleter}
+#define make_unique_custom(typename, deleter, raw_ptr)                     \
+  {.ptr = (typename *)raw_ptr, .deleter = (deleter_func_t)deleter}
 
 // ==========================================
 // 5. quick cast (manage raw pointer)
@@ -87,7 +97,7 @@ static inline void smart_free_custom(void *ptr) {
 #define _SMART_CONCAT_(a, b) a##b
 #define _SMART_CONCAT(a, b) _SMART_CONCAT_(a, b)
 
-#define unique_ptr_cast(raw_ptr)                                                    \
+#define unique_ptr_cast(raw_ptr)                                               \
   __attribute__((cleanup(smart_free))) typeof(raw_ptr) _SMART_CONCAT(          \
       scoped_, __LINE__) = (raw_ptr)
 
