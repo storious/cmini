@@ -18,7 +18,7 @@
 #ifndef UTEST_H
 #define UTEST_H
 
-#include <math.h>
+#include <math.h> // IWYU pragma: keep
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,26 +95,113 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
     }                                                                          \
   } while (0)
 
+// Type-aware format selector (C11 _Generic)
+#define _UT_FMT(val)                                                           \
+  _Generic((val),                                                              \
+      char: "%d",                                                              \
+      unsigned char: "%u",                                                     \
+      short: "%d",                                                             \
+      unsigned short: "%u",                                                    \
+      int: "%d",                                                               \
+      unsigned int: "%u",                                                      \
+      long: "%ld",                                                             \
+      unsigned long: "%lu",                                                    \
+      long long: "%lld",                                                       \
+      unsigned long long: "%llu",                                              \
+      float: "%g",                                                             \
+      double: "%g",                                                            \
+      long double: "%Lg",                                                       \
+      default: "%p")
+
 #define EXPECT_EQ(expected, actual, ...)                                       \
   do {                                                                         \
     typeof(expected) _e = (expected);                                          \
     typeof(actual) _a = (actual);                                              \
     if (_e != _a) {                                                            \
       fprintf(stderr, "  [FAIL] %s == %s\n", #expected, #actual);              \
-      fprintf(stderr, "        Values: %ld != %ld\n", (long)_e, (long)_a);     \
+      fprintf(stderr, "        Values: ");                                     \
+      fprintf(stderr, _UT_FMT(_e), _e);                                        \
+      fprintf(stderr, " != ");                                                 \
+      fprintf(stderr, _UT_FMT(_a), _a);                                        \
+      fprintf(stderr, "\n");                                                   \
       __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
     }                                                                          \
   } while (0)
 
+#define EXPECT_STREQ(expected, actual, ...)                                    \
+  do {                                                                         \
+    const char *_e = (expected);                                               \
+    const char *_a = (actual);                                                 \
+    /* Handle null pointer cases */                                            \
+    if (_e == nullptr && _a == nullptr) { /* both null, pass */                \
+    } else if (_e == nullptr || _a == nullptr) {                               \
+      fprintf(stderr, "  [FAIL] %s == %s\n", #expected, #actual);              \
+      fprintf(stderr, "        Values: (null) != \"%s\"\n", _e ? _e : _a);     \
+      __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
+      fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
+      return 1;                                                                \
+    } else if (strcmp(_e, _a) != 0) {                                          \
+      fprintf(stderr, "  [FAIL] %s == %s\n", #expected, #actual);              \
+      fprintf(stderr, "        Values: \"%s\" != \"%s\"\n", _e, _a);           \
+      __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
+      fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
+      return 1;                                                                \
+    }                                                                          \
+  } while (0)
+
+#define EXPECT_MEMEQ(expected, actual, size, ...)                              \
+  do {                                                                         \
+    const void *_e = (expected);                                               \
+    const void *_a = (actual);                                                 \
+    size_t _s = (size);                                                        \
+    if (_e == nullptr && _a == nullptr) { /* both null, pass */                \
+    } else if (_e == nullptr || _a == nullptr) {                               \
+      fprintf(stderr, "  [FAIL] %s == %s (size %zu)\n", #expected, #actual,    \
+              _s);                                                             \
+      fprintf(stderr, "        One pointer is null\n");                        \
+      __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
+      fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
+      return 1;                                                                \
+    } else if (memcmp(_e, _a, _s) != 0) {                                      \
+      fprintf(stderr, "  [FAIL] %s == %s (size %zu)\n", #expected, #actual,    \
+              _s);                                                             \
+      /* Optional: hex dump first few bytes */                                 \
+      fprintf(stderr, "        Memory content differs\n");                     \
+      __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
+      fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
+      return 1;                                                                \
+    }                                                                          \
+  } while (0)
+
+// Select correct fabs function based on type
+#define _UT_ABS(v)                                                             \
+  _Generic((v),                                                                \
+      int: abs,                                                                \
+      long: labs,                                                              \
+      long long: llabs,                                                        \
+      float: fabsf,                                                            \
+      long double: fabsl,                                                      \
+      default: fabs)(v) // default handles double, int, etc.
+
 #define EXPECT_NEAR(expected, actual, tolerance, ...)                          \
   do {                                                                         \
-    double _e = (double)(expected);                                            \
-    double _a = (double)(actual);                                              \
-    if (fabs(_e - _a) > (tolerance)) {                                         \
-      fprintf(stderr, "  [FAIL] |%f - %f| > %f\n", _e, _a,                     \
-              (double)(tolerance));                                            \
+    typeof(expected) _e = (expected);                                          \
+    typeof(actual) _a = (actual);                                              \
+    typeof(tolerance) _t = (tolerance);                                        \
+                                                                               \
+    /* Use type-respecting fabs, then compare against tolerance */             \
+    if (_UT_ABS(_e - _a) > _t) {                                               \
+      fprintf(stderr, "  [FAIL] |%s - %s| > %s\n", #expected, #actual,         \
+              #tolerance);                                                     \
+      fprintf(stderr, "        Diff: ");                                       \
+      fprintf(stderr, _UT_FMT(_e), _e);                                        \
+      fprintf(stderr, " != ");                                                 \
+      fprintf(stderr, _UT_FMT(_a), _a);                                        \
+      fprintf(stderr, " (tol: ");                                              \
+      fprintf(stderr, _UT_FMT(_t), _t);                                        \
+      fprintf(stderr, ")\n");                                                  \
       __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)          \
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
