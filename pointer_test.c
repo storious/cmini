@@ -52,7 +52,6 @@ TEST(pointer_advance) {
 }
 
 int main(int argc, char **argv) {
-  argv = (char*[]){"main","pointer_"};
-  RUN_TESTS(2, argv);
+  RUN_ALL;
   return EXIT_SUCCESS;
 }

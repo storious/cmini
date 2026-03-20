@@ -5,7 +5,6 @@
 */
 
 // Must define this in EXACTLY one source file
-#include <math.h>
 #define UTEST_IMPLEMENTATION
 #include "utest.h"
 

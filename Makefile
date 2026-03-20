@@ -7,6 +7,9 @@ test_ptr: pointer_test.o utest.h
 test_utest: utest_test.o utest.h
 	@./utest_test.o
 
+test_arena: arena_test.o
+	@./arena_test.o
+
 run: main.o
 	@./main.o
 

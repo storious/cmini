@@ -85,7 +85,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
     fprintf(stderr, "  [FAIL] %s\n", msg);                                     \
     __VA_OPT__(fprintf(stderr, "        [MSG] %s\n", __VA_ARGS__);)            \
     fprintf(stderr, "        [AT] %s:%d\n", file, line);                       \
-  } while (0)
+  } while (0);
 
 #define EXPECT_TRUE(expr, ...)                                                 \
   do {                                                                         \
@@ -93,7 +93,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       _UT_FAIL(#expr, __FILE__, __LINE__ __VA_OPT__(, __VA_ARGS__));           \
       return 1;                                                                \
     }                                                                          \
-  } while (0)
+  } while (0);
 
 // Type-aware format selector (C11 _Generic)
 #define _UT_FMT(val)                                                           \
@@ -110,7 +110,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       unsigned long long: "%llu",                                              \
       float: "%g",                                                             \
       double: "%g",                                                            \
-      long double: "%Lg",                                                       \
+      long double: "%Lg",                                                      \
       default: "%p")
 
 #define EXPECT_EQ(expected, actual, ...)                                       \
@@ -128,7 +128,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
     }                                                                          \
-  } while (0)
+  } while (0);
 
 #define EXPECT_STREQ(expected, actual, ...)                                    \
   do {                                                                         \
@@ -149,7 +149,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
     }                                                                          \
-  } while (0)
+  } while (0);
 
 #define EXPECT_MEMEQ(expected, actual, size, ...)                              \
   do {                                                                         \
@@ -173,7 +173,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
     }                                                                          \
-  } while (0)
+  } while (0);
 
 // Select correct fabs function based on type
 #define _UT_ABS(v)                                                             \
@@ -206,7 +206,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
       fprintf(stderr, "        [AT] %s:%d\n", __FILE__, __LINE__);             \
       return 1;                                                                \
     }                                                                          \
-  } while (0)
+  } while (0);
 
 #define EXPECT_NULLPTR(ptr, ...) EXPECT_TRUE((ptr) == nullptr, __VA_ARGS__)
 #define EXPECT_NOT_NULLPTR(ptr, ...) EXPECT_TRUE((ptr) != nullptr, __VA_ARGS__)
@@ -256,7 +256,7 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
     printf("Total: %d | [PASS]: %d | [FAIL]: %d | [SKIP]: %d\n",               \
            passed + failed + skipped, passed, failed, skipped);                \
     return failed > 0 ? 1 : 0;                                                 \
-  } while (false)
+  } while (false);
 
 #define RUN_ALL RUN_TESTS(0, nullptr)
 
