@@ -255,7 +255,8 @@ static bool _utest_should_run(const char *name, int argc, char **argv) {
     printf("\n-------------------\n");                                         \
     printf("Total: %d | [PASS]: %d | [FAIL]: %d | [SKIP]: %d\n",               \
            passed + failed + skipped, passed, failed, skipped);                \
-    return failed > 0 ? 1 : 0;                                                 \
+    if (failed)                                                                \
+      return failed;                                                           \
   } while (false);
 
 #define RUN_ALL RUN_TESTS(0, nullptr)

@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #define ARENA_IMPLEMENTATION
 #define UTEST_IMPLEMENTATION
 #include "arena.h"
