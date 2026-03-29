@@ -18,7 +18,6 @@ TEST(test_result) {
     printf("failed: %s\n", unwrapErrStr(&res1));
   }
 
-  // 测试 2：错误情况
   ResultIntErrStr res2 = divide(5, 0);
   if (isOkInt(&res2)) {
     printf("success: %d\n", unwrapInt(&res2));
