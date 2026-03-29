@@ -34,7 +34,7 @@ TEST(test_arena) {
   return EXIT_SUCCESS;
 }
 
-int main(int argc, char *argv[]) {
+int main(void) {
   RUN_ALL;
   return EXIT_SUCCESS;
 }

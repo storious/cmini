@@ -51,7 +51,7 @@ TEST(pointer_advance) {
   return 0;
 }
 
-int main(int argc, char **argv) {
+int main(void) {
   RUN_ALL;
   return EXIT_SUCCESS;
 }
