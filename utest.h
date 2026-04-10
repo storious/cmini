@@ -348,6 +348,7 @@ static void _utest_pool_free_all(void) {
 
 test_case_t *utest_list_head = nullptr;
 int utest_mem_fail_counter = 0;
+bool utest_mem_fail_flag = false;
 
 void utest_register(test_case_t *tc) {
   tc->next = utest_list_head;
@@ -359,9 +360,20 @@ void utest_register(test_case_t *tc) {
 // ==========================================
 
 void *utest_malloc_internal(size_t size, const char *file, int line) {
+
+  if (utest_mem_fail_counter < 0) {
+    utest_mem_fail_counter++;
+    utest_mem_fail_flag = true;
+  }
+
   if (utest_mem_fail_counter > 0) {
     utest_mem_fail_counter--;
     return nullptr;
+  }
+
+  if (utest_mem_fail_counter < 0) {
+    utest_mem_fail_counter++;
+    utest_mem_fail_flag = true;
   }
 
   // 1. Allocate metadata from Internal Pool (Super Fast)

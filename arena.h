@@ -156,6 +156,11 @@ void arena_trim(Arena *a);
 #define ARENA_ALIGNMENT 16
 #define ALIGN_UP(size, align) (((size) + ((align) - 1)) & ~((align) - 1))
 
+#if defined(_WIN32)
+#include <malloc.h>
+#define aligned_alloc(alignment, size) _aligned_malloc(size, alignment)
+#endif
+
 constexpr size_t region_size = sizeof(Region);
 
 // TODO: instead of accepting specific capacity new_region() should accept the
